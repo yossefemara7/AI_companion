@@ -1,0 +1,55 @@
+import pyaudio
+import speech_recognition as sr
+import numpy as np
+
+
+
+def record_text():
+    r = sr.Recognizer()
+    
+    while True:
+        print("Listening for input")
+
+        try:
+            with sr.Microphone() as source2:
+                r.adjust_for_ambient_noise(source2, duration=0.3)
+                print("Adjusted")
+                r.energy_threshold = 300
+                
+                audio2 = r.listen(source2)
+                
+                Text = r.recognize_google(audio2)
+                print(f'Text: {Text}')
+                
+                return Text 
+            
+        except sr.RequestError as e:
+            print(f"API unavailable or unresponsive; {0}".format(e))
+        except sr.UnknownValueError:
+            print("Speech not recognized. Please try again.")
+
+def main():
+    companion_listening = False
+    while True:
+        text = record_text()
+        if 'companion' in text.lower():
+            print("COmpanion activated: listening ... ")
+            
+            user_text = record_text()
+            print(f"Text: {text}")
+
+        return text
+
+
+    
+if __name__ == "__main__":
+    on = True
+    speech = ''
+    while on:
+        text = main()
+        speech += text + '\n'
+        if 'bye' in text.lower():
+            print("Robot closing")
+            break
+
+    print(speech)
