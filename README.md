@@ -1,5 +1,5 @@
 <div align="center">
- <img alt="ollama" height="200px" src="https://github.com/yossefemara7/AI_companion/Assets/CHANGE_TO_ICON_LINK_WHEN_UPLOADED">
+ <img alt="UMN IEEE" height="200px" src="https://github.com/yossefemara7/AI_companion/Assets/CHANGE_TO_ICON_LINK_WHEN_UPLOADED">
 </div>
 [IEEE at the University of Minnesota](https://ieee.umn.edu/)
 
