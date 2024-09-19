@@ -1,7 +1,8 @@
 <div align="center">
- <img alt="UMN IEEE" height="200px" src="https://github.com/yossefemara7/AI_companion/Assets/CHANGE_TO_ICON_LINK_WHEN_UPLOADED">
+ <img alt="UMN IEEE" height="200px" src="https://github.com/yossefemara7/AI_companion/blob/main/Assets/image.png">
 </div>
-[IEEE at the University of Minnesota](https://ieee.umn.edu/)
+
+[IEEE at the University of Minnesota](https://ieee.umn.edu)
 
 # Introduction
 
@@ -24,6 +25,9 @@ ollama serve
 ```
 
 ### To import a model (change "example" to any name you want)
+
+Download a model from a site and move it to the models folder (.gguf recommended)
+
 ```
 ollama create example -f Python/models/Modelfile
 ollama run example
