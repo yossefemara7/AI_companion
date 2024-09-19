@@ -1,25 +1,15 @@
-int motor1pin1 = 4;
-int motor1pin2 = 5;
-
-
-int motor2pin1 = 2;
-int motor2pin2 = 3;
-
-
-int motor3pin1 = 8;
-int motor3pin2 = 9;
-
-
-int motor4pin1 = 11;
-int motor4pin2 = 12;
-
-
+const int motor1pin1 = 4;
+const int motor1pin2 = 5;
+const int motor2pin1 = 2;
+const int motor2pin2 = 3;
+const int motor3pin1 = 8;
+const int motor3pin2 = 9;
+const int motor4pin1 = 11;
+const int motor4pin2 = 12;
 const int joyXPin = A1;    // Analog pin for X-axis
 const int joyYPin = A0;    // Analog pin for Y-axis
 const int swPin = 13;
 // Variables to store joystick values
-int joyXValue = 0;
-int joyYValue = 0;
 int rotation = 0;
 int orientation = 0;
 #include <SPI.h>
@@ -51,59 +41,24 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT,
 
 #define LOGO_HEIGHT   16
 #define LOGO_WIDTH    16
-
+int forwardPins[] = {motor1pin1,motor2pin1,motor3pin1,motor4pin1};
+int backwardPins[] = {motor1pin2,motor2pin2,motor3pin2,motor4pin2};
 void setup() {
   Serial.println("started");
   pinMode(swPin, INPUT_PULLUP);
-
-
-
-
-  pinMode(motor1pin1, OUTPUT);
-  pinMode(motor1pin2, OUTPUT);
-
-
-  pinMode(motor2pin1, OUTPUT);
-  pinMode(motor2pin2, OUTPUT);
- 
-  pinMode(motor3pin1, OUTPUT);
-  pinMode(motor3pin2, OUTPUT);
- 
-  pinMode(motor4pin1, OUTPUT);
-  pinMode(motor4pin2, OUTPUT);
-
-
+  for(int i = 0; i < sizeof(forwardPins);i++){
+    pinMode(forwardPins[i],OUTPUT);
+    pinMode(backwardPins[i],OUTPUT);
+  }
   Serial.begin(9600);  // Initialize serial communication
   Serial.println("Control motors with joystick.");
 
-
-  digitalWrite(motor1pin1, HIGH);
-  digitalWrite(motor1pin2, LOW);
-  delay(1000);
-  digitalWrite(motor1pin1, LOW);
-  digitalWrite(motor1pin1, LOW);
- 
-
-
-  digitalWrite(motor2pin1, HIGH);
-  digitalWrite(motor2pin2, LOW);
-  delay(1000);
-  digitalWrite(motor2pin1, LOW);
-  digitalWrite(motor2pin2, LOW);
-
-
-  digitalWrite(motor3pin1, HIGH);
-  digitalWrite(motor3pin2, LOW);
-  delay(1000);
-  digitalWrite(motor3pin1, LOW);
-  digitalWrite(motor3pin2, LOW);
-
-
-  digitalWrite(motor4pin1, HIGH);
-  digitalWrite(motor4pin2, LOW);
-  delay(1000);
-  digitalWrite(motor4pin1, LOW);
-  digitalWrite(motor4pin2, LOW);
+  for(int i = 0; i < sizeof(forwardPins);i++){
+    digitalWrite(forwardPins[i],HIGH);
+    digitalWrite(backwardPins[i],LOW);
+    digitalWrite(forwardPins[i],LOW);
+    delay(500);
+  }
   // testanimate();
 
   // rotate();
@@ -113,16 +68,13 @@ void setup() {
 #define YPOS   1
 #define DELTAY 2
 
-void loop() {
 
-
-  // delay(10000);
-  // forward();
-  // backward();
-  // right();
-  // left();
-  joyXValue = analogRead(joyXPin);
-  joyYValue = analogRead(joyYPin);
+void loop() {  
+  joyStickControl();
+}
+void joyStickControl(){
+  int joyXValue = analogRead(joyXPin);
+  int joyYValue = analogRead(joyYPin);
   bool switchState = digitalRead(swPin);
   if(!switchState){
     Serial.println(switchState);
@@ -134,20 +86,16 @@ void loop() {
   // Calculate velocity and angle
   float velocity = sqrt(X * X + Y * Y);
   float angle = atan2(Y, X); // Calculate angle in radians
-
-
   // Convert angle to degrees
   float angleDegrees = angle * (180.0 / PI);
 
 
   // Adjust angle so that zero degrees is to the right and starts from above the horizontal
-  angleDegrees = (angleDegrees - 90.0); // Rotate by 90 degrees to set zero to the right
+  angleDegrees -= 90.0; // Rotate by 90 degrees to set zero to the right
 
 
   // Flip vertically
-  angleDegrees = 180.0 - angleDegrees; // Flip the angle vertically
-
-
+  angleDegrees -= 180.0; // Flip the angle vertically
   // Normalize angle to be in the range [0, 360)
   if (angleDegrees < 0) {
     angleDegrees += 360.0;
@@ -183,8 +131,6 @@ void loop() {
     rotate_left();
     }
     rotation = rotation + 1;
-
-
   }
   if(velocity < 0.05){
     stopAllMotors();
@@ -194,18 +140,14 @@ void loop() {
     rotation = 0;
     orientation = orientation + 1;
   }
-
-
   angleDegrees = 0;
   velocity = 0;
-
-
   delay(10);  // Slight delay for stability
 }
 
-
 // Function to map velocity to PWM value
 int mapVelocityToPWM(float velocity) {
+  //use the map function that is, maybe if we know the minimum velocity
   int pwmValue = int(velocity * 255); // Map to range 0-255
   if (pwmValue > 255) pwmValue = 255; // Ensure PWM does not exceed 255
   if (pwmValue < -255) pwmValue = -255; // Ensure PWM does not go below -255
@@ -215,141 +157,83 @@ int mapVelocityToPWM(float velocity) {
 
 // Function to control motor using PWM
 void stopAllMotors(){
-  analogWrite(motor1pin1, 0);
-  analogWrite(motor1pin2, 0);
-
-
-  analogWrite(motor2pin1, 0);
-  analogWrite(motor2pin2, 0);
- 
-  analogWrite(motor3pin1, 0);
-  analogWrite(motor3pin2, 0);
-
-
-  analogWrite(motor4pin1, 0);
-  analogWrite(motor4pin2, 0);
+  for(int i = 0; i < sizeof(forwardPins);i++){
+    analogWrite(forwardPins[i],0);
+    analogWrite(backwardPins[i],0);
+  }
 }
 
 
 void forward(float velocity){
   stopAllMotors();
-  analogWrite(motor1pin1, velocity*250);
-  analogWrite(motor1pin2, 0);
-
-
-  analogWrite(motor2pin1, velocity*250);
-  analogWrite(motor2pin2, 0);
- 
-  analogWrite(motor3pin1, velocity*250);
-  analogWrite(motor3pin2, 0);
-
-
-  analogWrite(motor4pin1, velocity*250);
-  analogWrite(motor4pin2, 0);
+  for(int i = 0; i < sizeof(forwardPins);i++){
+    analogWrite(forwardPins[i],velocity*250);
+  }
 }
 void backward(float velocity){
   stopAllMotors();
-  analogWrite(motor1pin1, 0);
-  analogWrite(motor1pin2, velocity*250);
-
-
-  analogWrite(motor2pin1, 0);
-  analogWrite(motor2pin2, velocity*250);
- 
-  analogWrite(motor3pin1, 0);
-  analogWrite(motor3pin2, velocity*250);
-
-
-  analogWrite(motor4pin1, 0);
-  analogWrite(motor4pin2, velocity*250);
+  for(int i = 0; i < sizeof(backwardPins);i++){
+    analogWrite(backwardPins[i],velocity*250);
+  }
 }
 void right(float velocity){
   stopAllMotors();
-  analogWrite(motor1pin1, velocity*250);
-  analogWrite(motor1pin2, 0);
+  // analogWrite(motor1pin1, velocity*250);
+  // analogWrite(motor1pin2, 0);
+  //May or may not work
+  for(int i = 0; i < sizeof(forwardPins)-1;i++){
+    analogWrite(forwardPins[i],velocity*250);
+    analogWrite(backwardPins[i+=1],velocity*250);
+  }
+  
+  // analogWrite(motor2pin1, 0);
+  // analogWrite(motor2pin2, 250*velocity);
 
 
-  analogWrite(motor2pin1, 0);
-  analogWrite(motor2pin2, 250*velocity);
+  // analogWrite(motor3pin1, velocity*250);
+  // analogWrite(motor3pin2, 0);
 
 
-  analogWrite(motor3pin1, velocity*250);
-  analogWrite(motor3pin2, 0);
-
-
-  analogWrite(motor4pin1, 0);
-  analogWrite(motor4pin2, velocity*250);
+  // analogWrite(motor4pin1, 0);
+  // analogWrite(motor4pin2, velocity*250);
 }
 void left(float velocity){
   stopAllMotors();
-  analogWrite(motor1pin1, 0);
-  analogWrite(motor1pin2, 250*velocity);
-
-
+  analogWrite(motor1pin2, velocity*250);
   analogWrite(motor2pin1, velocity*250);
-  analogWrite(motor2pin2, 0);
-
-
-  analogWrite(motor3pin1, 0);
   analogWrite(motor3pin2, velocity*250);
-
-
   analogWrite(motor4pin1, velocity*250);
-  analogWrite(motor4pin2, 0);
 }
 void FR(float velocity){
-  //
   stopAllMotors();
-  analogWrite(motor1pin1, 0);
-  analogWrite(motor1pin2, velocity*750);
-
-
-  analogWrite(motor3pin1, 0);
-  analogWrite(motor3pin2, velocity*750);
+  for(int i = 0; i < sizeof(forwardPins)-1;i+=2){
+    analogWrite(backwardPins[i],velocity*750);
+  }
+  // analogWrite(motor1pin2, velocity*750);
+  // analogWrite(motor3pin2, velocity*750);
 }
 void FL(float velocity){
   stopAllMotors();
-  analogWrite(motor4pin2, velocity*750);
-  analogWrite(motor4pin1, 0);
-
-
-  analogWrite(motor2pin2, velocity*750);
-  analogWrite(motor2pin1, 0);
+  for(int i = 1; i < sizeof(forwardPins);i+=2){
+    analogWrite(backwardPins[i],velocity*750);
+  }
+  // analogWrite(motor4pin2, velocity*750);
+  // analogWrite(motor2pin2, velocity*750);
 }
 void rotate_right(){
   stopAllMotors();
   analogWrite(motor2pin1, 250);
-  analogWrite(motor2pin2, 0);
-
-
   analogWrite(motor3pin1, 250);
-  analogWrite(motor3pin2, 0);
-
-
-  analogWrite(motor1pin1, 0);
   analogWrite(motor1pin2, 250);
-
-
-  analogWrite(motor4pin1, 0);
   analogWrite(motor4pin2, 250);
   delay(100);
 }
 void rotate_left(){
   stopAllMotors();
-  analogWrite(motor2pin1, 0);
   analogWrite(motor2pin2, 250);
-
-
-  analogWrite(motor3pin1, 0);
   analogWrite(motor3pin2, 250);
-
-
   analogWrite(motor1pin1, 250);
-  analogWrite(motor1pin2, 0);
-
-
   analogWrite(motor4pin1, 250);
-  analogWrite(motor4pin2, 0);
   delay(100);
 }
 void controlMotor(int pin1, int pin2, int speed) {
@@ -357,6 +241,7 @@ void controlMotor(int pin1, int pin2, int speed) {
     analogWrite(pin1, speed); // Positive speed
     analogWrite(pin2, 0);
   } else if (speed < 0) {
+    //Why -speed is here
     analogWrite(pin1, 0);
     analogWrite(pin2, -speed); // Negative speed
   } else {
