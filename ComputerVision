@@ -1,0 +1,31 @@
+#If we wanted to shorten it and get rid of the resizing and pressing q to quit functionality, we can shorten it to 3 lines long
+from ultralytics import YOLO
+import cv2
+
+model = YOLO('yolov8n.pt')
+
+# Initialize the video capture for the webcam
+cap = cv2.VideoCapture(0)
+
+# Create a named window that allows resizing
+cv2.namedWindow('YOLOv8 Detection', cv2.WINDOW_NORMAL)
+
+while True:
+    ret, frame = cap.read()
+
+    if not ret:
+        break
+
+    # Run YOLOv8 inference, edit conf if needed
+    results = model.predict(source=frame, conf=0.5, show=False)
+
+    # Display the frame with detections
+    result_frame = results[0].plot()  # Get the image with predictions drawn
+    cv2.imshow('YOLOv8 Detection', result_frame)
+
+    # Close when q is pressed
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
