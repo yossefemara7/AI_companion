@@ -1,0 +1,11 @@
+# This is the basic format to import a model
+# FROM gets the location of your model
+# SYSTEM tells the model some directions
+
+FROM models/Phi-3-mini-4k-instruct-q4.gguf
+
+SYSTEM """You are a helpful assistant"""
+
+# ollama serve
+# ollama create CHANGE_TO_MODEL_NAME -f Python/models/Modelfile
+# ollama run CHANGE_TO_MODEL_NAME

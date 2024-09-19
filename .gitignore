@@ -1,0 +1,5 @@
+# Files to Ignore
+venv/
+
+# ignored AI models
+Python/models/*.gguf
