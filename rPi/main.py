@@ -1,19 +1,23 @@
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
-import time
-# import cv2
-import ast
+from whisper_mic import WhisperMic
+import os
 import re
-import json
 from tts import say
+import tts
+
 template = """
 Here is the conversation history: {context}
 Question: {question}
 Answer: 
 """
 
-model = OllamaLLM(model="llama3.1")
+# Color codes for terminal printing.
+RED = "\033[31m"
+RESET = "\033[0m"
+
 prompt = ChatPromptTemplate.from_template(template)
+model = OllamaLLM(model="llama3.1")
 chain = prompt | model
 
 def load_conversation(txt_name):
@@ -38,8 +42,13 @@ def delete_conversation(txt_name):
         pass
 
 def check_empty(filename):
+    # If the path doesn't exist, then it must be empty.
+    if os.path.exists(filename) is False:
+        return True
+    
     with open(filename, 'r') as file:
         content = file.read()
+    
     return not content
 
 def parser(text):
@@ -56,7 +65,7 @@ def parser(text):
     return info
 
 def handle_conversation():
-    starting_prompt = "Instructions (VERY IMPORTANT): You will be part of my project to make a desk pet, you have to limit your words to one sentence only and the format of your output should strictly follow this where emotion is one of the following emotions [Happy, Angry, Sad] and the movement array is an array of movement of Turn Right Turn Left Move Forward None and the array has to look something like this [\"Turn Right\" , \"Move Forward\"] : The final output should look something like this 'Emotion: Happy | Movement Array: [\"Turn Right" , "Move Forward\"] | Sentence: Hello! Im here to be your desk pet companion.', you dont necessarily have to move but only do so when appropriate: YOU MUST UNDER ALL CIRCUMSTANCES FOLLOW THE FORMAT DESCRIBED"
+    starting_prompt = "Instructions (VERY IMPORTANT): You will be part of my project to make a desk pet, you have to limit your words to one to three sentence(s) only and the format of your output should strictly follow this where emotion is one of the following emotions [Happy, Angry, Sad] and the movement array is an array of movement of Turn Right Turn Left Move Forward None and the array has to look something like this [\"Turn Right\" , \"Move Forward\"] : The final output should look something like this 'Emotion: Happy | Movement Array: [\"Turn Right" , "Move Forward\"] | Sentence: Hello! Im here to be your desk pet companion.', you dont necessarily have to move but only do so when appropriate: YOU MUST UNDER ALL CIRCUMSTANCES FOLLOW THE FORMAT DESCRIBED"
     context_file_name = "context.txt"
 
     if check_empty(context_file_name):
@@ -107,7 +116,6 @@ def handle_conversation():
 
         update_conversation(context_file_name, str(context))
         break
-
 
 if __name__ == "__main__":
     handle_conversation()
