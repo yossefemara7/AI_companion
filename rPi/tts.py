@@ -1,9 +1,9 @@
-import asyncio
 import edge_tts
 import pygame
-import os
 import re
+import asyncio
 
+from io import BytesIO
 
 def extract_short_names_from_file(file_path, locale='en'):
     with open(file_path, 'r') as file:
@@ -17,27 +17,47 @@ def extract_short_names_from_file(file_path, locale='en'):
     
     return short_names
 
-def say(TEXT, VOICE):
-    OUTPUT_FILE = "test.mp3"
-    SPEECH_RATE = "+25%"  # Increase speech speed by 50%
+def initiate_text_to_speech():
+    pygame.mixer.init()
 
-    async def amain():
-        communicate = edge_tts.Communicate(TEXT, VOICE, rate=SPEECH_RATE)
-        await communicate.save(OUTPUT_FILE)
+def close_text_to_speech():
+    pygame.mixer.quit()
+
+def say(TEXT: (str | None), VOICE: str):
+    """
+    A simple wrapper that allows us to easily use the edge_tts library to say the given text.
+    
+    Args:
+        TEXT (str): The text that we want to say.
+        VOICE (str): The voice that we want to use to say the text.
+    """
+    
+    SPEECH_RATE = "+25%"  # Increase speech speed by 50%
+    
+    if TEXT is None:
+        return
 
     try:
-        asyncio.run(amain())
-
-        pygame.mixer.init()
-        pygame.mixer.music.load(OUTPUT_FILE)
-        pygame.mixer.music.play()
-        while pygame.mixer.music.get_busy():
+        data = BytesIO()
+        
+        communicate = edge_tts.Communicate(TEXT, VOICE, rate=SPEECH_RATE)
+        for chunk in communicate.stream_sync():
+            if chunk["type"] == "audio":
+                data.write(chunk["data"])
+                
+        data.seek(0)
+        
+        sound = pygame.mixer.Sound(data)
+        sound.play()
+        while pygame.mixer.get_busy():
             pygame.time.Clock().tick(3)
-    finally:
-        pygame.mixer.music.stop()
-        pygame.mixer.quit()
-        if os.path.exists(OUTPUT_FILE):
-            os.remove(OUTPUT_FILE)
+            
+        sound.stop()
+        data.close()
+    except:
+        print("An error occurred while trying to say the text.")
+        # pygame.mixer.stop()
+    
 
 if __name__ == "__main__":
     say("Today's weather is sunny", 'en-AU-WilliamNeural')
