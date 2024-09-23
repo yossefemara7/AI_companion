@@ -1,6 +1,5 @@
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
-from whisper_mic import WhisperMic
 import os
 import re
 from tts import say

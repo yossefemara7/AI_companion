@@ -1,0 +1,11 @@
+ultralytics
+opencv-python
+langchain-community
+langchain_ollama
+pygame
+edge_tts # Our text to speech engine (for now)
+SpeechRecognition
+pyaudio
+pyttsx3
+torch
+faster-whisper
