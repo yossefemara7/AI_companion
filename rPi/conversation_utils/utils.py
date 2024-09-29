@@ -1,9 +1,10 @@
 import os
 import re
 from tts import say
-from .constants import TTS_MODEL_NAME, MOVEMENT_DICT
+from .constants import EMOTIONS_DICT, TTS_MODEL_NAME, MOVEMENT_DICT, GREETINGS
+import json
 
-def load_conversation(txt_name: str) -> str:
+def load_conversation(txt_name: str) -> list[dict[str, str]]:
     """
     A simple function for extracting the conversation history from the provided text file.
     
@@ -16,6 +17,9 @@ def load_conversation(txt_name: str) -> str:
     
     with open(txt_name, 'r') as file:
         content = file.read()
+    
+    # parse the content as JSON
+    content = json.loads(content)
     
     return content
 
@@ -38,6 +42,23 @@ def has_common_element(arr1: list, arr2: list) -> bool:
     
     return False
 
+def contains_greetings(text: str) -> bool:
+    """
+    A simple function to check if the provided text contains any greetings.
+    
+    Args:
+        text (str): The text to check for greetings.
+    
+    Returns:
+        True if the text contains any greetings, False otherwise.
+    """
+    
+    for greeting in GREETINGS:
+        if greeting in text:
+            return True
+    
+    return False
+
 def print_and_say(*args, sep=" ", tts_model_name=TTS_MODEL_NAME):
     """
     A wrapper function that allows the user to print and say the provided text.
@@ -51,17 +72,18 @@ def print_and_say(*args, sep=" ", tts_model_name=TTS_MODEL_NAME):
     print(*args)
     say(sep.join(args), tts_model_name)
 
-def update_conversation(txt_name: str, context: str):
+def update_conversation(txt_name: str, context: list[dict[str, str]]):
     """
     A simple function to update the conversation history.
     
     Args:
         txt_name (str): The name of the text file to update.
-        context (str): The context to append to the text file.
+        context (list[dict[str, str]]): The context to update the conversation history with.
     """
     
-    with open(txt_name, 'a') as file:
-        file.write(context)
+    with open(txt_name, 'w') as file:
+        # Write the context as a json string
+        file.write(json.dumps(context))
 
 def delete_conversation(txt_name: str):
     """
@@ -95,7 +117,7 @@ def check_empty(filename: str) -> bool:
     
     return not content
 
-def parser(text: str) -> dict[str, any]:
+def parser(text: str) -> tuple[dict[str, any], bool]:
     """
     A helper function to parse the emotion, movement, and sentences from the provided text.
     
@@ -104,6 +126,7 @@ def parser(text: str) -> dict[str, any]:
     
     Returns:
         A dictionary containing the parsed information.
+        A boolean indicating whether or not the parsing was successful.
     """
     
     # Regular expressions to extract each part
@@ -132,7 +155,52 @@ def parser(text: str) -> dict[str, any]:
         "Sentence" : sentence,
     }
     
-    return info
+    # If all are None, then the parsing was unsuccessful
+    success = emotion        is not None or        \
+              movement_array is not None or        \
+              sentence       is not None
+    
+    return info, success
+
+def compile_instructions(text: str) -> tuple[int, list[int], str]:
+    """
+    A helper function to compile the instructions from the provided text.
+    
+    Args:
+        text (str): The text to compile the instructions from.
+    
+    Returns:
+        A tuple containing the emotion encoding, the movement array encoding, and the sentence.
+    """
+    
+    instructions, success = parser(text)
+    
+    if success is False:
+        return 0, [3], text
+    
+    if not instructions["Emotion"] in EMOTIONS_DICT:
+        current_emotion = 0
+    else:
+        current_emotion = EMOTIONS_DICT[instructions["Emotion"]]
+        
+    movement_array = extract_encoding_from_movement_array(instructions["Movement"])
+    
+    sentence = instructions["Sentence"] or ""
+    
+    return current_emotion, movement_array, sentence
+
+def extract_context_from_conversation_history(conversation_history: str) -> list[str]:
+    """
+    A helper function to extract the context from the provided conversation history.
+    
+    Args:
+        conversation_history (str): The conversation history to extract the context from.
+    
+    Returns:
+        A list of strings representing the context.
+    """
+    
+    return conversation_history.split("\n")
 
 def extract_encoding_from_movement_array(movement: (list[str] | None)) -> list[int]:
     """
